@@ -142,12 +142,6 @@ std::unique_ptr<MySql, std::function<void(MySql*)>> ConnectPool::GetConnection()
     }
     //能走到这：要么队列不为空，要么队列为空被唤醒后不为空
     //自定义删除器，当客户端调用此函数获取连接，用完后，智能指针析构->归还连接
-    // auto f = [&](MySql* p){
-    //     std::unique_lock<std::mutex> lock(queueMtx_);
-    //     connQue_.push(p);
-    //     p->refreshAliveTime();
-    // };
-    // std::unique_ptr<MySql, decltype(f)> sp(connQue_.front(), f);
     std::unique_ptr<MySql, std::function<void(MySql*)>> sp(connQue_.front(), [&](MySql* p){
         std::unique_lock<std::mutex> lock(queueMtx_);
         connQue_.push(p);
