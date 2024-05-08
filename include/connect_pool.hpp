@@ -6,6 +6,7 @@
 #include <thread>
 #include <memory>
 #include <condition_variable>
+#include <functional>
 
 #include "mysql.hpp"
 #include "SimpleIni.h"
@@ -21,7 +22,7 @@ public:
 
     static ConnectPool& GetInstance();
     //给外部提供的接口：从连接池获取一条连接，且用智能指针管理，自定义删除器，使其析构时归还连接而不是释放连接
-    std::shared_ptr<MySql> GetConnection(); 
+    std::unique_ptr<MySql, std::function<void(MySql*)>> GetConnection(); 
 private:
     ConnectPool();               // 构造函数私有化,单例
     bool LoadConfig();           // 加载配置文件
@@ -38,7 +39,7 @@ private:
 
     std::queue<MySql*> connQue_;       // 存储空闲连接的队列
     std::mutex queueMtx_;              // 保护队列的互斥锁
-    std::condition_variable cv_;        //条件变量
+    std::condition_variable cv_;       //条件变量
     std::atomic<uint16_t> connectCnt_; //记录连接的总数，且是线程安全的
 };
 
@@ -130,7 +131,7 @@ ConnectPool::ConnectPool() {
     scan.detach();
 }
 
-std::shared_ptr<MySql> ConnectPool::GetConnection() {
+std::unique_ptr<MySql, std::function<void(MySql*)>> ConnectPool::GetConnection() {
     std::unique_lock<std::mutex> lock(queueMtx_);
     if (connQue_.empty()) {
         //等待，时间若未被唤醒，也自动醒
@@ -141,7 +142,13 @@ std::shared_ptr<MySql> ConnectPool::GetConnection() {
     }
     //能走到这：要么队列不为空，要么队列为空被唤醒后不为空
     //自定义删除器，当客户端调用此函数获取连接，用完后，智能指针析构->归还连接
-    std::shared_ptr<MySql> sp(connQue_.front(), [&](MySql* p){
+    // auto f = [&](MySql* p){
+    //     std::unique_lock<std::mutex> lock(queueMtx_);
+    //     connQue_.push(p);
+    //     p->refreshAliveTime();
+    // };
+    // std::unique_ptr<MySql, decltype(f)> sp(connQue_.front(), f);
+    std::unique_ptr<MySql, std::function<void(MySql*)>> sp(connQue_.front(), [&](MySql* p){
         std::unique_lock<std::mutex> lock(queueMtx_);
         connQue_.push(p);
         p->refreshAliveTime();
