@@ -1,15 +1,7 @@
 #pragma once
 #include <mysql/mysql.h>
 #include <string>
-
-
-// 数据库配置信息，可以写到配置文件里
-// static std::string server = "127.0.0.1";
-// static uint16_t port = 3306;
-// static std::string user = "root";
-// static std::string password = "123456";
-// static std::string dbname = "chat";
-
+#include <ctime>
 
 // mysql的客户端操作类
 class MySql {
@@ -20,8 +12,12 @@ public:
     bool update(std::string sql);       // 更新(insert, delete, update都是这个接口)
     MYSQL_RES* query(std::string sql);  // 查询操作
     MYSQL* GetConnection();             // 获取连接
+
+    void refreshAliveTime() { aliveTime_ = std::clock(); }            //每次进队列刷新时间
+    std::clock_t GetAliveTime() { return std::clock() - aliveTime_; } //获取存活时间 ms
 private:
     MYSQL* conn_;                       //一条连接
+    std::clock_t aliveTime_;            //记录在队列后的存活时间(配合数据库连接池使用的)
 };
 
 
@@ -41,7 +37,7 @@ bool MySql::connect(const std::string& ip, const uint16_t port, const std::strin
         // C和C++代码默认的编码字符是ASCII，如果不设置，从MySQL上拉下来的中文会乱码
         mysql_query(conn_, "set names gbk");
     } 
-    return p; //空就是false
+    return p; //p若为空不就是false吗
 }
 
 bool MySql::update(std::string sql) {

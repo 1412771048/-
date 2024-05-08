@@ -1,0 +1,3 @@
+/home/gyl/workspace/mysqlclient/connect_pool/build/CMakeFiles/app.dir
+/home/gyl/workspace/mysqlclient/connect_pool/build/CMakeFiles/edit_cache.dir
+/home/gyl/workspace/mysqlclient/connect_pool/build/CMakeFiles/rebuild_cache.dir

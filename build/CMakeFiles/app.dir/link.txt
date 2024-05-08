@@ -1,0 +1,1 @@
+/usr/bin/ccache /usr/bin/c++ -g -fsanitize=address -fno-omit-frame-pointer -rdynamic CMakeFiles/app.dir/main.cpp.o -o ../app  -lmysqlclient 
