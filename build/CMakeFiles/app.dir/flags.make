@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/gyl/workspace/mysqlclient/connect_pool/thirdparty -I/home/gyl/workspace/mysqlclient/connect_pool/include
+CXX_INCLUDES = -I/home/gyl/work/redis/connect_pool/thirdparty -I/home/gyl/work/redis/connect_pool/include
 
 CXX_FLAGS = -g -fsanitize=address -fno-omit-frame-pointer -std=c++20
 
